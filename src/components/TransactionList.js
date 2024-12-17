@@ -1,56 +1,79 @@
 import React from "react"
-import { Button, Table, Space, Tag, Popconfirm, Modal } from "antd"
-import { DeleteOutlined, BugOutlined } from '@ant-design/icons';
+import { Button, Table, Space, Tag, Popconfirm } from "antd"
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
 
 export default function TransactionList(props) {
-
   const columns = [
     { 
-      title: "Date-Time", 
+      title: "วันที่-เวลา", 
       dataIndex: "action_datetime", 
       key: "action_datetime",
-      render: (_, record) => dayjs(record.action_datetime).format("DD/MM/YYYY - HH:mm")
+      render: (text) => dayjs(text).format("DD/MM/YYYY - HH:mm")
     },
     { 
-      title: "Type", dataIndex: "type", key: "type", render: (_, record) => (
-        <Tag color={record.type === "income" ? 'green' : 'red'}>{record.type}</Tag>
+      title: "ประเภท", 
+      dataIndex: "type", 
+      key: "type", 
+      render: (text) => (
+        <Tag color={text === "income" ? 'green' : 'red'}>
+          {text === "income" ? "รายรับ" : "รายจ่าย"}
+        </Tag>
       ) 
     },
-    { title: "Amount", dataIndex: "amount", key: "amount" },
-    { title: "Note", dataIndex: "note", key: "note" },
+    { 
+      title: "จำนวนเงิน", 
+      dataIndex: "amount", 
+      key: "amount",
+      render: (text) => `${text.toLocaleString()} บาท`
+    },
+    { 
+      title: "รายละเอียด", 
+      dataIndex: "note", 
+      key: "note",
+      render: (text, record) => (
+        <input 
+          value={text || ''} 
+          onChange={(e) => props.onNoteChanged(record.id, e.target.value)}
+          style={{ width: '100%' }}
+        />
+      )
+    },
     {
-      title: "Action", key: "action", render: (_, record) => (
+      title: "จัดการ", 
+      key: "action", 
+      render: (_, record) => (
         <Space size="middle">
-          
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<EditOutlined />}
+            onClick={() => props.onEdit(record)}
+          />
           <Popconfirm
-            title="Delete the transaction"
-            description="Are you sure to delete this transaction?"
+            title="ลบรายการ"
+            description="คุณต้องการลบรายการนี้ใช่หรือไม่?"
             onConfirm={() => props.onRowDeleted(record.id)}
+            okText="ใช่"
+            cancelText="ไม่"
           >
-            <Button danger 
+            <Button 
+              danger 
               type="primary" 
               shape="circle" 
-              icon={<DeleteOutlined />} />
+              icon={<DeleteOutlined />} 
+            />
           </Popconfirm>
-          <Button 
-            type="primary" 
-            shape="circle" 
-            icon={<BugOutlined/>} 
-            onClick={() => {
-              Modal.info({
-                title: "Debug",
-                content: JSON.stringify(record)
-              })
-            }}/>
         </Space>
-      ), 
+      ),
     },
-  ]
+  ];
 
   return (
-    <>
-    <Table columns={columns} dataSource={props.data}/>
-    </>
-  )
+    <Table 
+      columns={columns} 
+      dataSource={props.data}
+      pagination={{ pageSize: 5 }}
+    />
+  );
 }
